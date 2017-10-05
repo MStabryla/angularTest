@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Angular Test</title>
+        <script src="Ang.js" ></script>
+        <script src="Xpath.js"></script>
+        <style>
+            .main{
+                margin: 0 auto;
+                position:relative;
+                width:500px;
+            }
+            .elem{
+                display:inline-block;
+                width:47%;
+                height:auto;
+                margin:5px;
+            }
+            .elem img {
+                cursor: pointer;
+            }
+            .years{
+                width:100px;
+                margin:15px auto;
+            }
+            .years button {
+                margin:0px 10px;
+                font-size:16px;
+            }
+            .table{
+                display:block;
+                margin:15px auto;
+                width:500px;
+            }
+            .table td{
+                padding:4px;
+            }
+            .back{
+                border:1px groove #7E1212;
+                background-color:red;
+                color:white;
+                display:block;
+                margin:25px auto!important;
+            }
+        </style>
+    </head>
+    <body ng-app="MyApp">
+        <div data-ng-controller="Main">
+            <div class="main" ng-show="showImages">
+                <div ng-repeat="image in dane" class="elem">
+                    <img ng-src="http://atarionline.pl/biblioteka/czasopisma/img/{{image.src}}" ng-value="image.klik" data-ng-click="ClickElem(this.image)" alt="err"/>
+                </div>
+            </div>
+            <div class="years" ng-show="showYears" style="width:{{100 * years.length}}px;">
+                <button ng-repeat="year in years" ng-click="ClickYear(this.year)">{{year}}</button>
+                <button ng-click="GetBack()" class="back">Powrót</button>
+            </div>
+            <table border="1" class="table" ng-show="showTable">
+                <tr>
+                    <th>Strona tytułowa</th>
+                    <th>Plik</th>
+                    <th>Pismo</th>
+                    <th>Darczyńcy</th>
+                </tr>
+                <tr ng-repeat="paper in papers">
+                    <td><img ng-if="!paper.min == ''" ng-src="http://atarionline.pl/biblioteka/czasopisma/{{paper.min}}" alt="err"/><span ng-if="!paper.min">Brak</span></td>
+                    <td ng-if="!paper.min == ''">Format: <b>{{paper.format}}</b> <br/> stron: <b></b>{{paper.stron}}</b> <br/> plik : <a ng-href="http://atarionline.pl/biblioteka/czasopisma/{{paper.plik}}">tutaj</a></td>
+                    <td ng-if="!paper.min == ''">Nazwa: <b>{{paper.nazwa}}</b> <br/> Numer: <b></b>{{paper.numer}}</b> <br/> wydawca: <b>{{paper.wydawca}}</b></td>
+                    <td ng-if="!paper.min == ''">Skan: <b>{{paper.scan}}</b> <br/> Przetworzenie: <b></b>{{paper.prze}}</b> <br/> Podesłał: <b>{{paper.pod}}</b></td>
+                    <td colspan="3" ng-if="!paper.min" style="text-align:center;">{{paper.brak}}</td>
+                </tr>
+            </table>
+        </div>
+        
+        
+            
+        </div>
+        <script>
+            var actPaper = "none";
+            function Main($scope,$http){
+                $scope.showImages = true;
+                $scope.showTable = false;
+                $http.get("image").then(function(resp){
+                    $scope.dane = resp.data.tem;
+                })
+                $scope.ClickElem = function(val){
+                    $scope.showImages = false;
+                    $scope.showYears = true;
+                    actPaper = val.klik;
+                    $http.post("years","npaper="+val.klik).then(function(resp){
+                        resp.data.tem.push("Wszystkie");
+                        //console.log(resp.data.tem);
+                        $scope.years = resp.data.tem;
+                    })
+                }
+                $scope.ClickYear = function(val){
+                    $http.post("papers","npaper="+actPaper+"&year="+val).then(function(resp){
+                        console.log(resp.data.tem);
+                        $scope.papers = resp.data.tem;
+                        $scope.showTable = true;
+                    })
+                }
+                $scope.GetBack = function(){
+                    $scope.showImages = true;
+                    $scope.showTable = false;
+                    $scope.showYears = false;
+                }
+            }
+            var app = angular.module("MyApp",[]);        
+            app.controller("Main",Main);
+        </script>
+    </body>
+</html>
